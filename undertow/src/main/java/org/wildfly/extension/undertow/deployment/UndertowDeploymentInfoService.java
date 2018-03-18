@@ -26,6 +26,7 @@ import io.undertow.Handlers;
 import io.undertow.jsp.JspFileHandler;
 import io.undertow.jsp.JspServletBuilder;
 import io.undertow.predicate.Predicate;
+import io.undertow.predicate.PredicatesHandler;
 import io.undertow.security.api.AuthenticationMechanism;
 import io.undertow.security.api.AuthenticationMechanismFactory;
 import io.undertow.security.api.AuthenticationMode;
@@ -1088,15 +1089,11 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
 
             if (predicatedHandlers != null && !predicatedHandlers.isEmpty()) {
                 d.addOuterHandlerChainWrapper(new RewriteCorrectingHandlerWrappers.PostWrapper());
+                new PredicatesHandler.Wrapper(predicatedHandlers, true);
                 d.addOuterHandlerChainWrapper(new HandlerWrapper() {
                     @Override
                     public HttpHandler wrap(HttpHandler handler) {
-                        if (predicatedHandlers.size() == 1) {
-                            PredicatedHandler ph = predicatedHandlers.get(0);
-                            return Handlers.predicate(ph.getPredicate(), ph.getHandler().wrap(handler), handler);
-                        } else {
-                            return Handlers.predicates(predicatedHandlers, handler);
-                        }
+                        return Handlers.predicates(predicatedHandlers, handler);
                     }
                 });
                 d.addOuterHandlerChainWrapper(new RewriteCorrectingHandlerWrappers.PreWrapper());
